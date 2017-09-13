@@ -10,6 +10,7 @@ using AccediBot.Repositories;
 
 namespace AccediBot.Dialogs
 {
+    [Serializable]
     public class LunchDialog : IDialog<object>
     {
         public string finalResponse = string.Empty;
@@ -25,8 +26,8 @@ namespace AccediBot.Dialogs
         {
             var lunchMessageActivity = await result as Activity;
 
-            string lunchUserCommand = lunchMessageActivity.Text.Substring(lunchMessageActivity.Text.IndexOf(Constants.LunchCommand) + Constants.LunchCommand.Length);
-            string[] lunchUserCommandParts = lunchUserCommand.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string lunchUserCommand = lunchMessageActivity.Text.ToLower().Substring(lunchMessageActivity.Text.IndexOf(Constants.LunchCommand) + Constants.LunchCommand.Length);
+            string[] lunchUserCommandParts = lunchUserCommand.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(e => e.Trim()).ToArray();
             bool operationResult = true;
             switch (lunchUserCommandParts[0])
             {
@@ -37,19 +38,85 @@ namespace AccediBot.Dialogs
                     operationResult = GetPlaceCount(lunchUserCommandParts[1]);
                     break;
                 case "list":
-                    operationResult = GetPlaceList(lunchUserCommandParts[1]);
+                    operationResult = GetPeopleListForPlace(lunchUserCommandParts[1]);
+                    break;
+                case "places":
+                    operationResult = GetAllPlaces();
                     break;
                 default:
-                    operationResult = false;
+                    if (lunchUserCommandParts[0].StartsWith("-") || lunchUserCommandParts[0].StartsWith("+"))
+                    {
+                        operationResult = ModifyPeopleForPlace(lunchUserCommandParts, lunchMessageActivity.From.Name);
+                    }
+                    else
+                    {
+                        operationResult = false;
+                    }
                     break;
             }
 
-            context.Done<string>("");
+            if (operationResult)
+            {
+                context.Done<string>(finalResponse); 
+            }
+            else
+            {
+                context.Done<string>("Invalid command");
+            }
         }
 
-        private bool GetPlaceList(string v)
+        private bool ModifyPeopleForPlace(string[] lunchUserCommandParts, string username)
         {
-            throw new NotImplementedException();
+            var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == lunchUserCommandParts[1]).SingleOrDefault();
+            int number;
+            if (int.TryParse(lunchUserCommandParts[0], out number))
+            {
+                if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
+                {
+                    lunchPlace.AddPerson(username, number);
+                    if (number > 0)
+                    {
+                        finalResponse = $"{ number.ToString()} people added to {lunchPlace.PlaceName}";
+                    }
+                    else
+                    {
+                        finalResponse = $"{ number.ToString()} people removed from {lunchPlace.PlaceName}";
+                    }
+                    return true;
+                } 
+            }
+
+            return false;
+        }
+
+        private bool GetAllPlaces()
+        {
+            var placesList = LunchRepository.LunchPlaces.Where(e => ((DateTime.Now - e.AddedDate).Hours < 12)).Select(e => e.PlaceName).ToList();
+            finalResponse = "Places for lunch today are:" + Environment.NewLine;
+            foreach (var singlePlace in placesList)
+            {
+                finalResponse += singlePlace + Environment.NewLine;
+            }
+            return true;
+        }
+
+        private bool GetPeopleListForPlace(string placeName)
+        {
+            var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
+            if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
+            {
+                finalResponse = $"People who signed up for {lunchPlace.PlaceName} are:" + Environment.NewLine;
+                foreach (var singlePerson in lunchPlace.SignedUpPeople)
+                {
+                    finalResponse += singlePerson + Environment.NewLine;
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private bool GetPlaceCount(string placeName)
@@ -96,6 +163,7 @@ namespace AccediBot.Dialogs
                 LunchRepository.LunchPlaces.Add(new LunchPlaceData(placeName, userName));
             }
 
+            finalResponse = placeName + " added.";
             return true;
         }
     }

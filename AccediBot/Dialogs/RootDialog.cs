@@ -4,6 +4,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Collections.Generic;
 using System.Threading;
+using AccediBot.Helpers;
 
 namespace AccediBot.Dialogs
 {
@@ -22,11 +23,13 @@ namespace AccediBot.Dialogs
             var messageActivity = await result as Activity;
             
             string messageText = messageActivity.Text;
-            if (messageText.ToLower().Contains("#link"))
+            if (messageText.ToLower().Contains(Constants.LinkCommand))
             {
-                // User said 'order', so invoke the New Order Dialog and wait for it to finish.
-                // Then, call ResumeAfterNewOrderDialog.
                 await context.Forward(new LinksDialog(), this.ResumeAfterLinksDialog, messageActivity, CancellationToken.None);
+            }
+            else if (messageText.ToLower().Contains(Constants.LunchCommand))
+            {
+                await context.Forward(new LunchDialog(), this.ResumeAfterLunchDialog, messageActivity, CancellationToken.None);
             }
             else
             {
@@ -38,6 +41,17 @@ namespace AccediBot.Dialogs
                 await context.PostAsync(replyActivity);
                 context.Wait(MessageReceivedAsync);
             }
+        }
+
+        private async Task ResumeAfterLunchDialog(IDialogContext context, IAwaitable<object> result)
+        {
+            //At this point, lunch dialog has finished and returned some value to use within the root dialog.
+            var resultFromLinks = await result;
+
+            await context.PostAsync(resultFromLinks.ToString());
+
+            // Again, wait for the next message from the user.
+            context.Wait(this.MessageReceivedAsync);
         }
 
         private async Task ResumeAfterLinksDialog(IDialogContext context, IAwaitable<object> result)
