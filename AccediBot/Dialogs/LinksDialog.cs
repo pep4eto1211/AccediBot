@@ -24,10 +24,24 @@ namespace AccediBot.Dialogs
         #region Message handling
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            var linkMessageActivity = await result as Activity;
-            string linkName = linkMessageActivity.Text.Substring(linkMessageActivity.Text.IndexOf(Constants.LinkCommand) + Constants.LinkCommand.Length);
-            string link = LinksRepository.Links[linkName.Trim().ToLower()];
-            context.Done<string>(link);
+            try
+            {
+                var linkMessageActivity = await result as Activity;
+                string linkName = linkMessageActivity.Text.Substring(linkMessageActivity.Text.IndexOf(Constants.LinkCommand) + Constants.LinkCommand.Length);
+                if (LinksRepository.Links.Keys.Contains(linkName.Trim().ToLower()))
+                {
+                    string link = LinksRepository.Links[linkName.Trim().ToLower()];
+                    context.Done<string>("The link you requested is: " + link); 
+                }
+                else
+                {
+                    context.Done<string>("I don't have information for such service.");
+                }
+            }
+            catch (Exception)
+            {
+                context.Done<string>("Something went wrong. Please try again!");
+            }
         } 
         #endregion
     }

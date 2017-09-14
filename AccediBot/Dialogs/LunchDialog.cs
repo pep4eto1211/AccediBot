@@ -31,42 +31,84 @@ namespace AccediBot.Dialogs
         {
             var lunchMessageActivity = await result as Activity;
 
-            string lunchUserCommand = lunchMessageActivity.Text.ToLower().Substring(lunchMessageActivity.Text.IndexOf(Constants.LunchCommand) + Constants.LunchCommand.Length);
-            string[] lunchUserCommandParts = lunchUserCommand.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(e => e.Trim()).ToArray();
-            bool operationResult = true;
-            switch (lunchUserCommandParts[0])
+            try
             {
-                case "at":
-                    operationResult = AddPlace(lunchUserCommandParts, lunchMessageActivity.From.Name);
-                    break;
-                case "count":
-                    operationResult = GetPlaceCount(lunchUserCommandParts[1]);
-                    break;
-                case "who":
-                    operationResult = GetPeopleListForPlace(lunchUserCommandParts[1]);
-                    break;
-                case "places":
-                    operationResult = GetAllPlaces();
-                    break;
-                default:
-                    if (lunchUserCommandParts[0].StartsWith("-") || lunchUserCommandParts[0].StartsWith("+"))
+                string lunchUserCommand = lunchMessageActivity.Text.ToLower().Substring(lunchMessageActivity.Text.IndexOf(Constants.LunchCommand) + Constants.LunchCommand.Length);
+                string[] lunchUserCommandParts = lunchUserCommand.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(e => e.Trim()).ToArray();
+                bool operationResult = true;
+                if (lunchUserCommandParts.Length >= 1)
+                {
+                    switch (lunchUserCommandParts[0])
                     {
-                        operationResult = ModifyPeopleForPlace(lunchUserCommandParts, lunchMessageActivity.From.Name);
-                    }
-                    else
-                    {
-                        operationResult = false;
-                    }
-                    break;
-            }
+                        case "at":
+                            if (lunchUserCommandParts.Length >= 2)
+                            {
+                                operationResult = AddPlace(lunchUserCommandParts, lunchMessageActivity.From.Name);
+                            }
+                            else
+                            {
+                                operationResult = false;
+                            }
+                            break;
+                        case "count":
+                            if (lunchUserCommandParts.Length >= 2)
+                            {
+                                operationResult = GetPlaceCount(lunchUserCommandParts[1]);
+                            }
+                            else
+                            {
+                                operationResult = false;
+                            }
+                            break;
+                        case "who":
+                            if (lunchUserCommandParts.Length >= 2)
+                            {
+                                operationResult = GetPeopleListForPlace(lunchUserCommandParts[1]);
+                            }
+                            else
+                            {
+                                operationResult = false;
+                            }
+                            break;
+                        case "places":
+                            operationResult = GetAllPlaces();
+                            break;
+                        default:
+                            if (lunchUserCommandParts.Length >= 2)
+                            {
+                                if (lunchUserCommandParts[0].StartsWith("-") || lunchUserCommandParts[0].StartsWith("+"))
+                                {
+                                    operationResult = ModifyPeopleForPlace(lunchUserCommandParts, lunchMessageActivity.From.Name);
+                                }
+                                else
+                                {
+                                    operationResult = false;
+                                }
+                            }
+                            else
+                            {
+                                operationResult = false;
+                            }
+                            break;
+                    } 
+                }
+                else
+                {
+                    operationResult = false;
+                }
 
-            if (operationResult)
-            {
-                context.Done<string>(_finalResponse);
+                if (operationResult)
+                {
+                    context.Done<string>(_finalResponse);
+                }
+                else
+                {
+                    context.Done<string>("Invalid command");
+                }
             }
-            else
+            catch (Exception)
             {
-                context.Done<string>("Invalid command");
+                context.Done<string>("Something went wrong. Please try again!");
             }
         }
         #endregion

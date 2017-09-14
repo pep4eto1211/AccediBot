@@ -23,25 +23,32 @@ namespace AccediBot.Dialogs
         #region Message handling
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            var messageActivity = await result as Activity;
+            try
+            {
+                var messageActivity = await result as Activity;
 
-            string messageText = messageActivity.Text;
-            if (messageText.ToLower().Contains(Constants.LinkCommand))
-            {
-                await context.Forward(new LinksDialog(), this.ResumeAfterLinksDialog, messageActivity, CancellationToken.None);
-            }
-            else if (messageText.ToLower().Contains(Constants.LunchCommand))
-            {
-                await context.Forward(new LunchDialog(), this.ResumeAfterLunchDialog, messageActivity, CancellationToken.None);
-            }
-            else
-            {
+                string messageText = messageActivity.Text;
+                if (messageText.ToLower().Contains(Constants.LinkCommand))
+                {
+                    await context.Forward(new LinksDialog(), this.ResumeAfterLinksDialog, messageActivity, CancellationToken.None);
+                }
+                else if (messageText.ToLower().Contains(Constants.LunchCommand))
+                {
+                    await context.Forward(new LunchDialog(), this.ResumeAfterLunchDialog, messageActivity, CancellationToken.None);
+                }
+                else
+                {
 
-                // return our reply to the user
-                Activity replyActivity = ((Activity)context.Activity).CreateReply();
-                replyActivity.Text = $"You can type #link and the name of the service for which you want info";
-                //reply.AddHeroCard("Choose option", new List<string>() { "Option 1", "Option 2", "Option 3" });
-                await context.PostAsync(replyActivity);
+                    // return our reply to the user
+                    Activity replyActivity = ((Activity)context.Activity).CreateReply();
+                    replyActivity.Text = $"You can type #info to see what I can do";
+                    await context.PostAsync(replyActivity);
+                    context.Wait(MessageReceivedAsync);
+                }
+            }
+            catch (Exception)
+            {
+                await context.PostAsync("Something went wrong. Please try again!");
                 context.Wait(MessageReceivedAsync);
             }
         }
@@ -64,7 +71,7 @@ namespace AccediBot.Dialogs
             //At this point, links dialog has finished and returned some value to use within the root dialog.
             var resultFromLinks = await result;
 
-            await context.PostAsync($"The link you requested is: {resultFromLinks}");
+            await context.PostAsync(resultFromLinks.ToString());
 
             // Again, wait for the next message from the user.
             context.Wait(this.MessageReceivedAsync);
