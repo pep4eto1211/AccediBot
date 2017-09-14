@@ -42,7 +42,7 @@ namespace AccediBot.Dialogs
                 case "count":
                     operationResult = GetPlaceCount(lunchUserCommandParts[1]);
                     break;
-                case "list":
+                case "who":
                     operationResult = GetPeopleListForPlace(lunchUserCommandParts[1]);
                     break;
                 case "places":
@@ -87,7 +87,7 @@ namespace AccediBot.Dialogs
                     }
                     else
                     {
-                        _finalResponse = $"{ number.ToString()} people removed from {lunchPlace.PlaceName}";
+                        _finalResponse = $"{ Math.Abs(number).ToString()} people removed from {lunchPlace.PlaceName}";
                     }
                     return true;
                 }
@@ -99,10 +99,10 @@ namespace AccediBot.Dialogs
         private bool GetAllPlaces()
         {
             var placesList = LunchRepository.LunchPlaces.Where(e => ((DateTime.Now - e.AddedDate).Hours < 12)).Select(e => e.PlaceName).ToList();
-            _finalResponse = "Places for lunch today are:" + Environment.NewLine;
+            _finalResponse = "Places for lunch today are: ";
             foreach (var singlePlace in placesList)
             {
-                _finalResponse += singlePlace + Environment.NewLine;
+                _finalResponse += singlePlace + ", ";
             }
             return true;
         }
@@ -112,10 +112,10 @@ namespace AccediBot.Dialogs
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
             if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
             {
-                _finalResponse = $"People who signed up for {lunchPlace.PlaceName} are:" + Environment.NewLine;
+                _finalResponse = $"People who signed up for {lunchPlace.PlaceName} are: ";
                 foreach (var singlePerson in lunchPlace.SignedUpPeople)
                 {
-                    _finalResponse += singlePerson + Environment.NewLine;
+                    _finalResponse += singlePerson + ", ";
                 }
 
                 return true;
