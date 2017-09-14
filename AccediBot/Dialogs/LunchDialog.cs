@@ -13,15 +13,20 @@ namespace AccediBot.Dialogs
     [Serializable]
     public class LunchDialog : IDialog<object>
     {
-        public string finalResponse = string.Empty;
+        #region Private members
+        private string _finalResponse = string.Empty;
+        #endregion
 
+        #region IDialog members
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
 
             return Task.CompletedTask;
         }
+        #endregion
 
+        #region Message handling
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var lunchMessageActivity = await result as Activity;
@@ -57,14 +62,16 @@ namespace AccediBot.Dialogs
 
             if (operationResult)
             {
-                context.Done<string>(finalResponse); 
+                context.Done<string>(_finalResponse);
             }
             else
             {
                 context.Done<string>("Invalid command");
             }
         }
+        #endregion
 
+        #region Helper methods
         private bool ModifyPeopleForPlace(string[] lunchUserCommandParts, string username)
         {
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == lunchUserCommandParts[1]).SingleOrDefault();
@@ -76,14 +83,14 @@ namespace AccediBot.Dialogs
                     lunchPlace.AddPerson(username, number);
                     if (number > 0)
                     {
-                        finalResponse = $"{ number.ToString()} people added to {lunchPlace.PlaceName}";
+                        _finalResponse = $"{ number.ToString()} people added to {lunchPlace.PlaceName}";
                     }
                     else
                     {
-                        finalResponse = $"{ number.ToString()} people removed from {lunchPlace.PlaceName}";
+                        _finalResponse = $"{ number.ToString()} people removed from {lunchPlace.PlaceName}";
                     }
                     return true;
-                } 
+                }
             }
 
             return false;
@@ -92,10 +99,10 @@ namespace AccediBot.Dialogs
         private bool GetAllPlaces()
         {
             var placesList = LunchRepository.LunchPlaces.Where(e => ((DateTime.Now - e.AddedDate).Hours < 12)).Select(e => e.PlaceName).ToList();
-            finalResponse = "Places for lunch today are:" + Environment.NewLine;
+            _finalResponse = "Places for lunch today are:" + Environment.NewLine;
             foreach (var singlePlace in placesList)
             {
-                finalResponse += singlePlace + Environment.NewLine;
+                _finalResponse += singlePlace + Environment.NewLine;
             }
             return true;
         }
@@ -105,10 +112,10 @@ namespace AccediBot.Dialogs
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
             if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
             {
-                finalResponse = $"People who signed up for {lunchPlace.PlaceName} are:" + Environment.NewLine;
+                _finalResponse = $"People who signed up for {lunchPlace.PlaceName} are:" + Environment.NewLine;
                 foreach (var singlePerson in lunchPlace.SignedUpPeople)
                 {
-                    finalResponse += singlePerson + Environment.NewLine;
+                    _finalResponse += singlePerson + Environment.NewLine;
                 }
 
                 return true;
@@ -124,7 +131,7 @@ namespace AccediBot.Dialogs
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
             if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
             {
-                finalResponse = $"People count for {lunchPlace.PlaceName} is {lunchPlace.SignedUpCount.ToString()}";
+                _finalResponse = $"People count for {lunchPlace.PlaceName} is {lunchPlace.SignedUpCount.ToString()}";
             }
             else
             {
@@ -136,9 +143,9 @@ namespace AccediBot.Dialogs
 
         private bool AddPlace(string[] lunchUserCommandParts, string userName)
         {
-            if (lunchUserCommandParts[1] == "count" || 
-                lunchUserCommandParts[1] == "at" || 
-                lunchUserCommandParts[1] == "list" || 
+            if (lunchUserCommandParts[1] == "count" ||
+                lunchUserCommandParts[1] == "at" ||
+                lunchUserCommandParts[1] == "list" ||
                 lunchUserCommandParts[1][0] == '+' ||
                 lunchUserCommandParts[1][0] == '-')
             {
@@ -163,8 +170,9 @@ namespace AccediBot.Dialogs
                 LunchRepository.LunchPlaces.Add(new LunchPlaceData(placeName, userName));
             }
 
-            finalResponse = placeName + " added.";
+            _finalResponse = placeName + " added.";
             return true;
-        }
+        } 
+        #endregion
     }
 }

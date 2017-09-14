@@ -11,17 +11,20 @@ namespace AccediBot.Dialogs
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+        #region IDialog members
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
 
             return Task.CompletedTask;
         }
+        #endregion
 
+        #region Message handling
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var messageActivity = await result as Activity;
-            
+
             string messageText = messageActivity.Text;
             if (messageText.ToLower().Contains(Constants.LinkCommand))
             {
@@ -42,13 +45,15 @@ namespace AccediBot.Dialogs
                 context.Wait(MessageReceivedAsync);
             }
         }
+        #endregion
 
+        #region Dialog resume callbacks
         private async Task ResumeAfterLunchDialog(IDialogContext context, IAwaitable<object> result)
         {
             //At this point, lunch dialog has finished and returned some value to use within the root dialog.
-            var resultFromLinks = await result;
+            var resultFromLunch = await result;
 
-            await context.PostAsync(resultFromLinks.ToString());
+            await context.PostAsync(resultFromLunch.ToString());
 
             // Again, wait for the next message from the user.
             context.Wait(this.MessageReceivedAsync);
@@ -63,6 +68,7 @@ namespace AccediBot.Dialogs
 
             // Again, wait for the next message from the user.
             context.Wait(this.MessageReceivedAsync);
-        }
+        } 
+        #endregion
     }
 }

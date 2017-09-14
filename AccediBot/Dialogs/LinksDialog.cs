@@ -12,19 +12,23 @@ namespace AccediBot.Dialogs
     [Serializable]
     public class LinksDialog : IDialog<object>
     {
+        #region IDialog members
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
 
             return Task.CompletedTask;
         }
+        #endregion
 
+        #region Message handling
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var linkMessageActivity = await result as Activity;
             string linkName = linkMessageActivity.Text.Substring(linkMessageActivity.Text.IndexOf(Constants.LinkCommand) + Constants.LinkCommand.Length);
             string link = LinksRepository.Links[linkName.Trim().ToLower()];
             context.Done<string>(link);
-        }
+        } 
+        #endregion
     }
 }
