@@ -47,6 +47,7 @@ namespace AccediBot.Dialogs
                             }
                             else
                             {
+                                this._finalResponse = "Please type a place name";
                                 operationResult = false;
                             }
                             break;
@@ -57,6 +58,7 @@ namespace AccediBot.Dialogs
                             }
                             else
                             {
+                                this._finalResponse = "Please type a place name";
                                 operationResult = false;
                             }
                             break;
@@ -67,6 +69,7 @@ namespace AccediBot.Dialogs
                             }
                             else
                             {
+                                this._finalResponse = "Please type a place name";
                                 operationResult = false;
                             }
                             break;
@@ -82,11 +85,13 @@ namespace AccediBot.Dialogs
                                 }
                                 else
                                 {
+                                    this._finalResponse = "Please type + or - and the number of people, like this: +1 Some Place";
                                     operationResult = false;
                                 }
                             }
                             else
                             {
+                                this._finalResponse = "Please type a place name";
                                 operationResult = false;
                             }
                             break;
@@ -94,17 +99,11 @@ namespace AccediBot.Dialogs
                 }
                 else
                 {
+                    this._finalResponse = "Please enter a valid command";
                     operationResult = false;
                 }
 
-                if (operationResult)
-                {
-                    context.Done<string>(_finalResponse);
-                }
-                else
-                {
-                    context.Done<string>("Invalid command");
-                }
+                context.Done<string>(_finalResponse);
             }
             catch (Exception)
             {
@@ -133,9 +132,17 @@ namespace AccediBot.Dialogs
                     }
                     return true;
                 }
+                else
+                {
+                    this._finalResponse = $"{lunchUserCommandParts[1]} hasn't been added to the places for lunch yet. You can type #lunch at {lunchUserCommandParts[1]} to add it";
+                    return false;
+                }
             }
-
-            return false;
+            else
+            {
+                this._finalResponse = "Please type a number when adding or removing people";
+                return false;
+            }
         }
 
         private bool GetAllPlaces()
@@ -159,11 +166,12 @@ namespace AccediBot.Dialogs
                 {
                     _finalResponse += singlePerson + ", ";
                 }
-
+                _finalResponse = _finalResponse.Remove(_finalResponse.Length - 2);
                 return true;
             }
             else
             {
+                this._finalResponse = $"{placeName} hasn't been added to the places for lunch yet. You can type #lunch at {placeName} to add it";
                 return false;
             }
         }
@@ -177,6 +185,7 @@ namespace AccediBot.Dialogs
             }
             else
             {
+                this._finalResponse = $"{placeName} hasn't been added to the places for lunch yet. You can type #lunch at {placeName} to add it";
                 return false;
             }
 
@@ -191,14 +200,17 @@ namespace AccediBot.Dialogs
                 lunchUserCommandParts[1][0] == '+' ||
                 lunchUserCommandParts[1][0] == '-')
             {
+                this._finalResponse = "The place name can't be \"count\", \"at\", \"list\", \"+\" or \"-\"";
                 return false;
             }
+
             string placeName = lunchUserCommandParts[1];
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
             if (lunchPlace != null)
             {
-                if ((DateTime.Now - lunchPlace.AddedDate).Hours > 12)
+                if ((DateTime.Now - lunchPlace.AddedDate).Hours < 12)
                 {
+                    this._finalResponse = $"{placeName} has already been added as a lunch place today";
                     return false;
                 }
                 else
