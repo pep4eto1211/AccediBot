@@ -36,10 +36,12 @@ namespace AccediBot.Dialogs
                 {
                     await context.Forward(new LunchDialog(), this.ResumeAfterLunchDialog, messageActivity, CancellationToken.None);
                 }
+                else if (messageText.ToLower().Contains(Constants.InfoCommand))
+                {
+                    await context.Forward(new InfoDialog(), this.ResumeAfterInfoDialog, messageActivity, CancellationToken.None);
+                }
                 else
                 {
-
-                    // return our reply to the user
                     Activity replyActivity = ((Activity)context.Activity).CreateReply();
                     replyActivity.Text = $"You can type #info to see what I can do";
                     await context.PostAsync(replyActivity);
@@ -55,6 +57,17 @@ namespace AccediBot.Dialogs
         #endregion
 
         #region Dialog resume callbacks
+        private async Task ResumeAfterInfoDialog(IDialogContext context, IAwaitable<object> result)
+        {
+            //At this point, info dialog has finished and returned some value to use within the root dialog.
+            var resultFromInfo = await result;
+
+            await context.PostAsync(resultFromInfo.ToString());
+
+            // Again, wait for the next message from the user.
+            context.Wait(this.MessageReceivedAsync);
+        }
+
         private async Task ResumeAfterLunchDialog(IDialogContext context, IAwaitable<object> result)
         {
             //At this point, lunch dialog has finished and returned some value to use within the root dialog.

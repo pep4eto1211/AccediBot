@@ -28,14 +28,28 @@ namespace AccediBot.Dialogs
             {
                 var linkMessageActivity = await result as Activity;
                 string linkName = linkMessageActivity.Text.Substring(linkMessageActivity.Text.IndexOf(Constants.LinkCommand) + Constants.LinkCommand.Length);
-                if (LinksRepository.Links.Keys.Contains(linkName.Trim().ToLower()))
+
+                if (linkName.Trim().ToLower() != "all")
                 {
-                    string link = LinksRepository.Links[linkName.Trim().ToLower()];
-                    context.Done<string>("The link you requested is: " + link); 
+                    if (LinksRepository.Links.Keys.Contains(linkName.Trim().ToLower()))
+                    {
+                        string link = LinksRepository.Links[linkName.Trim().ToLower()];
+                        context.Done<string>("The link you requested is: " + link);
+                    }
+                    else
+                    {
+                        context.Done<string>("I don't have information for such service.");
+                    } 
                 }
                 else
                 {
-                    context.Done<string>("I don't have information for such service.");
+                    string response = "All systems for which I have information are: \n\n";
+                    foreach (var link in LinksRepository.Links.Keys)
+                    {
+                        response += link + "\n\n";
+                    }
+
+                    context.Done<string>(response);
                 }
             }
             catch (Exception)

@@ -22,7 +22,7 @@ namespace AccediBot
         #region Private methods
         private static void InsertLinks()
         {
-            _links.Add("keyedin", "https://www.keyedinprojects.co.uk/secure/sec_login.aspx?SiteID=ODM4214670");
+            _links.Add("timetracking", "https://www.keyedinprojects.co.uk/secure/sec_login.aspx?SiteID=ODM4214670");
         } 
         #endregion
 

@@ -9,5 +9,6 @@ namespace AccediBot.Helpers
     {
         public const string LinkCommand = "#link";
         public const string LunchCommand = "#lunch";
+        public const string InfoCommand = "#info";
     }
 }
