@@ -48,7 +48,7 @@ namespace AccediBot.Dialogs
                     context.Wait(MessageReceivedAsync);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 await context.PostAsync("Something went wrong. Please try again!");
                 context.Wait(MessageReceivedAsync);
@@ -71,9 +71,9 @@ namespace AccediBot.Dialogs
         private async Task ResumeAfterLunchDialog(IDialogContext context, IAwaitable<object> result)
         {
             //At this point, lunch dialog has finished and returned some value to use within the root dialog.
-            var resultFromLunch = await result;
+            var resultFromLunch = await result as Activity;
 
-            await context.PostAsync(resultFromLunch.ToString());
+            await context.PostAsync(resultFromLunch);
 
             // Again, wait for the next message from the user.
             context.Wait(this.MessageReceivedAsync);

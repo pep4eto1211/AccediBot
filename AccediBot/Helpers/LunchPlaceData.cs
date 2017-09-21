@@ -29,6 +29,10 @@ namespace AccediBot
             if (this._signedUpPeople.ContainsKey(userName))
             {
                 this._signedUpPeople[userName] += count;
+                if (this._signedUpPeople[userName] <= 0)
+                {
+                    this._signedUpPeople.Remove(userName);
+                }
             }
             else
             {

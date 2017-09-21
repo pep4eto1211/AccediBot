@@ -30,6 +30,7 @@ namespace AccediBot.Dialogs
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var lunchMessageActivity = await result as Activity;
+            Activity responseActivity = lunchMessageActivity.CreateReply();
 
             try
             {
@@ -54,7 +55,7 @@ namespace AccediBot.Dialogs
                         case "count":
                             if (lunchUserCommandParts.Length >= 2)
                             {
-                                operationResult = GetPlaceCount(lunchUserCommandParts[1]);
+                                operationResult = GetPlaceCount(lunchUserCommandParts[1], ref responseActivity);
                             }
                             else
                             {
@@ -65,7 +66,7 @@ namespace AccediBot.Dialogs
                         case "who":
                             if (lunchUserCommandParts.Length >= 2)
                             {
-                                operationResult = GetPeopleListForPlace(lunchUserCommandParts[1]);
+                                operationResult = GetPeopleListForPlace(lunchUserCommandParts[1], ref responseActivity);
                             }
                             else
                             {
@@ -81,7 +82,7 @@ namespace AccediBot.Dialogs
                             {
                                 if (lunchUserCommandParts[0].StartsWith("-") || lunchUserCommandParts[0].StartsWith("+"))
                                 {
-                                    operationResult = ModifyPeopleForPlace(lunchUserCommandParts, lunchMessageActivity.From.Name);
+                                    operationResult = ModifyPeopleForPlace(lunchUserCommandParts, lunchMessageActivity.From.Name, ref responseActivity);
                                 }
                                 else
                                 {
@@ -103,7 +104,8 @@ namespace AccediBot.Dialogs
                     operationResult = false;
                 }
 
-                context.Done<string>(_finalResponse);
+                responseActivity.Text = _finalResponse;
+                context.Done(responseActivity);
             }
             catch (Exception)
             {
@@ -113,7 +115,7 @@ namespace AccediBot.Dialogs
         #endregion
 
         #region Helper methods
-        private bool ModifyPeopleForPlace(string[] lunchUserCommandParts, string username)
+        private bool ModifyPeopleForPlace(string[] lunchUserCommandParts, string username, ref Activity responseActivity)
         {
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == lunchUserCommandParts[1]).SingleOrDefault();
             int number;
@@ -135,6 +137,18 @@ namespace AccediBot.Dialogs
                 else
                 {
                     this._finalResponse = $"{lunchUserCommandParts[1]} hasn't been added to the places for lunch yet. You can type #lunch at {lunchUserCommandParts[1]} to add it";
+                    List<string> cardActions = new List<string>();
+                    string numberString = string.Empty;
+                    if (number > 0)
+                    {
+                        numberString = "+";
+                    }
+                    numberString += number.ToString();
+                    foreach (var place in LunchRepository.LunchPlaces)
+                    {
+                        cardActions.Add($"#lunch {numberString} {place.PlaceName}");
+                    }
+                    responseActivity.AddHeroCard<string>("Or chose one of the existing ones:", cardActions);
                     return false;
                 }
             }
@@ -156,7 +170,7 @@ namespace AccediBot.Dialogs
             return true;
         }
 
-        private bool GetPeopleListForPlace(string placeName)
+        private bool GetPeopleListForPlace(string placeName, ref Activity responseActivity)
         {
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
             if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
@@ -172,11 +186,17 @@ namespace AccediBot.Dialogs
             else
             {
                 this._finalResponse = $"{placeName} hasn't been added to the places for lunch yet. You can type #lunch at {placeName} to add it";
+                List<string> cardActions = new List<string>();
+                foreach (var place in LunchRepository.LunchPlaces)
+                {
+                    cardActions.Add($"#lunch who {place.PlaceName}");
+                }
+                responseActivity.AddHeroCard<string>("Or chose one of the existing ones:", cardActions);
                 return false;
             }
         }
 
-        private bool GetPlaceCount(string placeName)
+        private bool GetPlaceCount(string placeName, ref Activity responseActivity)
         {
             var lunchPlace = LunchRepository.LunchPlaces.Where(e => e.PlaceName == placeName).SingleOrDefault();
             if ((lunchPlace != null) && ((DateTime.Now - lunchPlace.AddedDate).Hours < 12))
@@ -186,6 +206,13 @@ namespace AccediBot.Dialogs
             else
             {
                 this._finalResponse = $"{placeName} hasn't been added to the places for lunch yet. You can type #lunch at {placeName} to add it";
+                List<string> cardActions = new List<string>();
+                foreach (var place in LunchRepository.LunchPlaces)
+                {
+                    cardActions.Add($"#lunch count {place.PlaceName}");
+                }
+                responseActivity.AddHeroCard<string>("Or chose one of the existing ones:", cardActions);
+
                 return false;
             }
 
